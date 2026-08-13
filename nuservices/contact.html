@@ -77,6 +77,29 @@
           <label for="message">Anything we should know? (optional)</label>
           <textarea id="message" name="message" placeholder="e.g., We get about 20 calls a day and miss most of the after-hours ones..."></textarea>
         </div>
+
+        <fieldset class="consent-box field full" style="border:1.5px solid rgba(46,42,59,0.12);">
+          <legend>Communication preferences</legend>
+          <div class="consent-item">
+            <input type="checkbox" id="consent-sms" name="consent_sms" value="yes">
+            <label for="consent-sms"><b>SMS customer care.</b> By checking this box, you provide consent to receive automated customer care SMS messages from National Utility Services LLC. Message frequency varies and message and data rates may apply. You may opt out at any time by replying "STOP". Reply "HELP" for help or email <a href="mailto:hello@nuservices.org">hello@nuservices.org</a>.</label>
+          </div>
+          <div class="consent-item">
+            <input type="checkbox" id="consent-calls" name="consent_calls" value="yes">
+            <label for="consent-calls"><b>Automated calls.</b> By checking this box, you provide consent to receive automated customer care calls from National Utility Services LLC. You may opt out at any time by contacting <a href="mailto:hello@nuservices.org">hello@nuservices.org</a>.</label>
+          </div>
+          <div class="consent-item">
+            <input type="checkbox" id="consent-notify" name="consent_notifications" value="yes">
+            <label for="consent-notify"><b>Account notifications.</b> By checking this box, you consent to receive account notifications, service updates, and important information about your NuServices account via SMS. Message frequency varies and message and data rates may apply. Reply "STOP" to opt out or "HELP" for help.</label>
+          </div>
+          <p class="consent-fine">Consent is not required as a condition of purchasing any products or services. Your mobile information will never be shared with third parties or affiliates for marketing or promotional purposes.</p>
+        </fieldset>
+
+        <div class="consent-item" style="grid-column: 1 / -1;">
+          <input type="checkbox" id="agree-terms" name="agree_terms" value="yes" required>
+          <label for="agree-terms">I agree to the <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a>. <b>(required)</b></label>
+        </div>
+
         <div class="field full">
           <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">Start My Free Trial</button>
         </div>
@@ -163,6 +186,8 @@
         <ul>
           <li><a href="about.html">About Us</a></li>
           <li><a href="contact.html">Contact</a></li>
+          <li><a href="terms.html">Terms of Service</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
         </ul>
       </div>
       <div class="footer-col">
