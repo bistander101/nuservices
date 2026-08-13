@@ -78,26 +78,24 @@
           <textarea id="message" name="message" placeholder="e.g., We get about 20 calls a day and miss most of the after-hours ones..."></textarea>
         </div>
 
-        <fieldset class="consent-box field full" style="border:1.5px solid rgba(46,42,59,0.12);">
-          <legend>Communication preferences</legend>
-          <div class="consent-item">
-            <input type="checkbox" id="consent-sms" name="consent_sms" value="yes">
-            <label for="consent-sms"><b>SMS customer care.</b> By checking this box, you provide consent to receive automated customer care SMS messages from National Utility Services LLC. Message frequency varies and message and data rates may apply. You may opt out at any time by replying "STOP". Reply "HELP" for help or email <a href="mailto:hello@nuservices.org">hello@nuservices.org</a>.</label>
-          </div>
-          <div class="consent-item">
-            <input type="checkbox" id="consent-calls" name="consent_calls" value="yes">
-            <label for="consent-calls"><b>Automated calls.</b> By checking this box, you provide consent to receive automated customer care calls from National Utility Services LLC. You may opt out at any time by contacting <a href="mailto:hello@nuservices.org">hello@nuservices.org</a>.</label>
-          </div>
-          <div class="consent-item">
-            <input type="checkbox" id="consent-notify" name="consent_notifications" value="yes">
-            <label for="consent-notify"><b>Account notifications.</b> By checking this box, you consent to receive account notifications, service updates, and important information about your NuServices account via SMS. Message frequency varies and message and data rates may apply. Reply "STOP" to opt out or "HELP" for help.</label>
-          </div>
-          <p class="consent-fine">Consent is not required as a condition of purchasing any products or services. Your mobile information will never be shared with third parties or affiliates for marketing or promotional purposes.</p>
-        </fieldset>
+        <div class="consent-card dark field full" style="flex-direction:row;">
+          <input type="checkbox" id="consent-sms" name="consent_sms" value="yes">
+          <label for="consent-sms">By checking this box, you provide consent to receive automated customer care SMS messages from National Utility Services LLC. Message frequency varies and message and data rates may apply. You may opt-out by replying 'STOP'. Reply 'HELP' for help or email <a href="mailto:hello@nuservices.org">hello@nuservices.org</a>. Consent is not required as a condition of purchasing any products or services.</label>
+        </div>
 
-        <div class="consent-item" style="grid-column: 1 / -1;">
+        <div class="consent-card dark field full" style="flex-direction:row;">
+          <input type="checkbox" id="consent-calls" name="consent_calls" value="yes">
+          <label for="consent-calls">By checking this box, you provide consent to receive automated customer care calls from National Utility Services LLC. Call frequency varies and standard phone rates may apply. You may opt-out at any time by contacting <a href="mailto:hello@nuservices.org">hello@nuservices.org</a>. Consent is not required as a condition of purchasing any products or services.</label>
+        </div>
+
+        <div class="consent-card field full" style="flex-direction:row;">
+          <input type="checkbox" id="consent-notify" name="consent_notifications" value="yes">
+          <label for="consent-notify">By checking this box, you consent to receive account notifications, service updates, and important information about your National Utility Services account via SMS. Message frequency varies. You may opt-out at any time by contacting <a href="mailto:hello@nuservices.org">hello@nuservices.org</a> or by following the unsubscribe instructions in our communications. Consent is not required as a condition of purchasing any products or services.</label>
+        </div>
+
+        <div class="consent-card field full" style="flex-direction:row;">
           <input type="checkbox" id="agree-terms" name="agree_terms" value="yes" required>
-          <label for="agree-terms">I agree to the <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a>. <b>(required)</b></label>
+          <label for="agree-terms">I agree with the <a href="terms.html">Terms &amp; Conditions</a> and <a href="privacy.html">Privacy Policy</a>.</label>
         </div>
 
         <div class="field full">
