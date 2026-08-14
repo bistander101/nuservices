@@ -43,7 +43,11 @@
     <div class="form-card">
       <h2 style="font-size:1.5rem; margin-bottom:8px;">Start your free trial</h2>
       <p style="margin-bottom:26px; font-size:0.95rem;">Tell us a little about your business and we'll have your AI receptionist answering calls the same day.</p>
-      <form action="mailto:hello@nuservices.org" method="post" enctype="text/plain" class="form-grid">
+      <form id="contactForm" action="https://api.web3forms.com/submit" method="POST" class="form-grid">
+        <input type="hidden" name="access_key" value="b0ff1200-c5ae-444e-ac45-fe4d2cf2ea73">
+        <input type="hidden" name="subject" value="New lead from nuservices.org contact form">
+        <input type="hidden" name="from_name" value="NuServices Website">
+        <input type="checkbox" name="botcheck" style="display:none;" tabindex="-1" autocomplete="off">
         <div class="field">
           <label for="name">Your name</label>
           <input type="text" id="name" name="name" placeholder="Jane Smith" required>
@@ -99,9 +103,51 @@
         </div>
 
         <div class="field full">
-          <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">Start My Free Trial</button>
+          <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" style="width:100%;">Start My Free Trial</button>
         </div>
+        <div id="formResult" class="field full" style="display:none; text-align:center; padding:14px 18px; border-radius:12px; font-weight:600; font-size:0.95rem;"></div>
       </form>
+      <script>
+        document.getElementById('contactForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var form = e.target;
+          var btn = document.getElementById('submitBtn');
+          var result = document.getElementById('formResult');
+          btn.disabled = true;
+          btn.textContent = 'Sending…';
+          fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            body: new FormData(form)
+          })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            result.style.display = 'block';
+            if (data.success) {
+              result.style.background = 'var(--mint-soft)';
+              result.style.border = '1px solid var(--mint)';
+              result.style.color = 'var(--mint-deep)';
+              result.textContent = "Thanks! Your request is in — we'll be in touch within one business day.";
+              form.reset();
+            } else {
+              result.style.background = 'var(--blush-soft)';
+              result.style.border = '1px solid var(--blush)';
+              result.style.color = 'var(--blush-deep)';
+              result.textContent = 'Something went wrong. Please email us at hello@nuservices.org.';
+            }
+          })
+          .catch(function () {
+            result.style.display = 'block';
+            result.style.background = 'var(--blush-soft)';
+            result.style.border = '1px solid var(--blush)';
+            result.style.color = 'var(--blush-deep)';
+            result.textContent = 'Network error. Please email us at hello@nuservices.org.';
+          })
+          .finally(function () {
+            btn.disabled = false;
+            btn.textContent = 'Start My Free Trial';
+          });
+        });
+      </script>
       <p style="margin-top:16px; font-size:0.82rem; color:var(--ink-faint); text-align:center;">14-day free trial · No credit card required · Cancel anytime</p>
     </div>
 
