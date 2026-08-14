@@ -113,6 +113,20 @@ img { max-width: 100%; display: block; }
   font-weight: 800;
 }
 
+.logo-img {
+  height: 62px;
+  width: auto;
+  display: block;
+}
+
+.site-footer .logo-img {
+  height: 50px;
+}
+
+@media (max-width: 660px) {
+  .logo-img { height: 48px; }
+}
+
 .logo small {
   display: block;
   font-size: 0.62rem;
