@@ -254,7 +254,7 @@ setInterval(()=>{
   if(!heroRotating)return;
   heroH.classList.add('fade');
   setTimeout(()=>{hi++;renderHero();heroH.classList.remove('fade');},500);
-},3400);
+},10200);   /* hero rotation: slowed 3x per Kurt (was 3400ms) */
 
 const t0=Date.now();
 /* progress: endowed start ~18%, climb to 96% over progressSeconds */
