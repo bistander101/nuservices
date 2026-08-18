@@ -19,6 +19,16 @@
                                                → (800) 111-6666  ⚠ placeholder number
     6. Nothing matches → "still searching" holding state
 
+  PROGRAM NO-GO STATES (blocked program falls through to next priority):
+    Payday: WA PA OR NC MT MN KS CT CO · Debt $7-15k: WA ND ID GA
+    Debt $15k+: CO CT KS MN MT NH OR WA · Credit repair: ME KS MN OR · Annuity: none
+
+  CONSENT STAGE (question 4): "If you're accepted, may we share your name and
+  contact information?" Yes/No + fine print. Answer & ISO timestamp stored in
+  S.consent / S.consentTs — MUST be posted server-side with client IP before
+  launch. "No" still routes; it only bars sharing data with the partner.
+  Language pending David Healy review.
+
   DISPLAY CAPS (honesty guards): lender counter max 65, match counter max 12.
   PACING: progress 18% → 96% over 5 minutes (fixed). Offer reveals ~5.5s after
   the final answer.
@@ -32,7 +42,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>OneLoanPlace — Finding Your Best Option</title>
+<title>OneLoanPlace — Finding Your Match</title>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -111,6 +121,7 @@
   .option.selected .cb::after{transform:rotate(45deg) scale(1)}
   .continue{display:block;width:100%;margin-top:2px;margin-bottom:6px;padding:14px;font-size:var(--fs-md);font-weight:800;font-family:inherit;color:#fff;background:var(--blue);border:none;border-radius:12px;cursor:pointer;transition:.15s;touch-action:manipulation}
   .continue:disabled{opacity:.35;cursor:not-allowed}
+  .fineprint{font-size:var(--fs-sm);color:var(--slate);opacity:.75;line-height:1.45;margin:2px 2px 8px;text-align:left}
 
   /* ── OFFER (the peak-end) ── */
   .offer{text-align:center;padding:6px 2px;animation:reveal .6s ease}
@@ -189,7 +200,7 @@
       </form>
     </div>
     <div id="stageC" class="hidden">
-      <div class="qintro">This helps us find your best match <span class="dn">👇</span></div>
+      <div class="qintro">This helps us find your match <span class="dn">👇</span></div>
       <h2 class="q">How much credit card debt do you have?</h2>
       <div id="ccForm">
         <div class="option" role="button" tabindex="0"><input type="radio" name="cc" value="under7"><span class="cb"></span><span class="otitle">Under $7,000</span></div>
@@ -204,6 +215,15 @@
         <div class="option" role="button" tabindex="0"><input type="radio" name="pd" value="yes"><span class="cb"></span><span class="otitle">Yes</span></div>
         <div class="option" role="button" tabindex="0"><input type="radio" name="pd" value="no"><span class="cb"></span><span class="otitle">No</span></div>
       </div>
+    </div>
+    <div id="stageE" class="hidden">
+      <div class="qintro">Last step <span class="dn">👇</span></div>
+      <h2 class="q">If you're accepted, may we share your name and contact information?</h2>
+      <div id="consForm">
+        <div class="option" role="button" tabindex="0"><input type="radio" name="cons" value="yes"><span class="cb"></span><span><span class="otitle">Yes, I agree</span><span class="odesc">Share my info with the partner or lender handling my program so they can contact me</span></span></div>
+        <div class="option" role="button" tabindex="0"><input type="radio" name="cons" value="no"><span class="cb"></span><span><span class="otitle">No thanks</span><span class="odesc">I'll connect by phone myself</span></span></div>
+      </div>
+      <p class="fineprint">By choosing "Yes, I agree," you authorize OneLoanPlace.com to share the information you provided with the partner or lender handling your program, and you agree that OneLoanPlace.com and that partner or lender may contact you about your file at the number you provided by phone or text message, including with automated technology. Consent is not a condition of purchase or approval. Message &amp; data rates may apply. You may revoke consent at any time.</p>
     </div>
     <div id="offer" class="offer hidden">
       <div class="big" id="offerBig">Great news!</div>
@@ -224,7 +244,7 @@ document.getElementById('jswarn').remove();   // JS is alive — remove the prev
 /* ── INPUTS from the CRM redirect: ?name=Justin&state=FL ── */
 const params=new URLSearchParams(location.search);
 const S={name:(params.get('name')||'').trim(),usState:(params.get('state')||'FL').toUpperCase(),
-         income:null,debt:null,payday:null,progressSeconds:300,lenders:8,matches:0,stepShown:1};
+         income:null,debt:null,payday:null,consent:null,consentTs:null,progressSeconds:300,lenders:8,matches:0,stepShown:1};
 const $=id=>document.getElementById(id);
 /* say("it looks like…") → "Justin, it looks like…" or "It looks like…" when no name */
 const say=s=>S.name?`${S.name}, ${s}`:s.charAt(0).toUpperCase()+s.slice(1);
@@ -248,6 +268,10 @@ document.querySelectorAll('.option').forEach(opt=>{
 });
 
 const CR_BLOCKED=['ME','KS','MN','OR'];
+/* Program no-go states (hard-coded per Kurt, Aug 17 2026) — blocked programs fall through to the next priority */
+const PD_BLOCKED=['WA','PA','OR','NC','MT','MN','KS','CT','CO'];          /* payday */
+const DEBT_MID_BLOCKED=['WA','ND','ID','GA'];                             /* debt $7–15k */
+const DEBT_HIGH_BLOCKED=['CO','CT','KS','MN','MT','NH','OR','WA'];        /* debt $15k+ */
 const NUM={debtMid:'+15612850387',debtHigh:'+15613696723',payday:'+15618617735',annuity:'+18502905544',creditRepair:'+18001116666'};
 
 const LENDER_CAP=65;   /* honesty guard: never claim more lenders than this */
@@ -262,7 +286,7 @@ function heroMsg(){
     n?`We're on it, <span>${n}</span>.`:`We're on it.`,
     `📌 Keep this page open — it saves your spot`,
     `Real lenders are reviewing your file.`,
-    `Comparing programs to fit you best.`,
+    `Comparing programs to fit you.`,
     `📌 Keep this page open — it saves your spot`,
     `Hang tight — you're closer than you think.`,
     `Searching our network for your match.`
@@ -298,7 +322,7 @@ function advanceStep(to){
 }
 
 /* "now doing" line — constant motion */
-const DOING=['Reviewing your file…','Verifying your details…','Checking with lenders in our network…','Comparing available programs…','Running a soft check — no impact to your credit…','Matching your profile…','Narrowing to your best-fit lenders…'];
+const DOING=['Reviewing your file…','Verifying your details…','Checking with lenders in our network…','Comparing available programs…','This review will have no impact to your credit…','Matching your profile…','Narrowing to matching lenders…'];
 let di=0;const doEl=$('doing');
 setInterval(()=>{doEl.classList.add('fade');setTimeout(()=>{doEl.textContent=DOING[di%DOING.length];di++;doEl.classList.remove('fade');},400);},2600);
 
@@ -308,7 +332,7 @@ function celebrate(msg){toast.textContent=msg;toast.classList.add('show');setTim
 setTimeout(()=>celebrate('✓ First lenders are reviewing your file'),4000);
 
 /* stage machine */
-const show=id=>['stageB','stageC','stageD','offer'].forEach(s=>$(s).classList.toggle('hidden',s!==id));
+const show=id=>['stageB','stageC','stageD','stageE','offer'].forEach(s=>$(s).classList.toggle('hidden',s!==id));
 setTimeout(()=>show('stageB'),2600);
 
 (function(){const f=$('income-form'),b=f.querySelector('.continue'),bx=[...f.querySelectorAll('input')],none=bx.find(x=>x.value==='none'),oth=bx.filter(x=>x!==none);
@@ -318,7 +342,9 @@ f.addEventListener('submit',e=>{e.preventDefault();S.income=[...f.querySelectorA
 
 function radio(id,key,next){$(id).addEventListener('change',e=>{[...$(id).querySelectorAll('.option')].forEach(o=>o.classList.toggle('selected',o.querySelector('input').checked));S[key]=e.target.value;setTimeout(next,220);});}
 radio('ccForm','debt',()=>show('stageD'));
-radio('pdForm','payday',()=>{['stageB','stageC','stageD','offer'].forEach(s=>$(s).classList.add('hidden'));celebrate('✓ All set — finding your best match');checkEligibilityThenRoute();});
+radio('pdForm','payday',()=>show('stageE'));
+/* CONSENT stage — records the client's answer + timestamp; 'no' still routes (client can dial out; we just don't share data) */
+radio('consForm','consent',()=>{S.consentTs=new Date().toISOString();['stageB','stageC','stageD','stageE','offer'].forEach(s=>$(s).classList.add('hidden'));celebrate(S.consent==='yes'?'✓ Thanks — finding your match':'✓ All set — finding your match');checkEligibilityThenRoute();});
 
 /* PRODUCTION HOOK — replace/augment with the real PartnerEligibilityCheck call */
 function checkEligibilityThenRoute(){
@@ -329,9 +355,9 @@ function checkEligibilityThenRoute(){
       /* PRIORITY: 1) Annuity  2) Debt $15k+  3) Debt $7–15k  4) Payday  5) Credit repair */
       const pq=(S.payday==='yes'), aq=inc.includes('settlement-annuity-royalties'), cq=!CR_BLOCKED.includes(S.usState);
       if(aq) return offer(say(`we have a program you seem qualified for that can get you the money you are looking for.`),NUM.annuity,false);
-      if(S.debt==='high') return offer(say(`it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`),NUM.debtHigh,false);
-      if(S.debt==='mid') return offer(say(`it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`),NUM.debtMid,false);
-      if(pq) return offer(say(`we have a program that can help you pay off your payday loan more easily, avoiding the fees and interest you are presently paying.`),NUM.payday,false);
+      if(S.debt==='high'&&!DEBT_HIGH_BLOCKED.includes(S.usState)) return offer(say(`it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`),NUM.debtHigh,false);
+      if(S.debt==='mid'&&!DEBT_MID_BLOCKED.includes(S.usState)) return offer(say(`it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`),NUM.debtMid,false);
+      if(pq&&!PD_BLOCKED.includes(S.usState)) return offer(say(`we have a program that can help you pay off your payday loan more easily, avoiding the fees and interest you are presently paying.`),NUM.payday,false);
       if(cq) return offer(say(`based on your profile, we recommend bringing a credit repair analyst on the line to review your report and see what can be done. There is no obligation.`),NUM.creditRepair,true);
       keepSearching();
     }
@@ -349,7 +375,7 @@ function offer(msg,num,isCR){
   else {b.classList.remove('hidden');sb.classList.remove('hidden');}
   b.href='tel:'+num;$('callNum').textContent=num.replace('+1','').replace(/(\d{3})(\d{3})(\d{4})/,'($1) $2-$3');
 }
-function keepSearching(){document.querySelector('.card').classList.remove('offerview');['stageB','stageC','stageD','offer'].forEach(s=>$(s).classList.add('hidden'));$('crYN').classList.add('hidden');$('callBtn').classList.add('hidden');$('standby').classList.add('hidden');heroRotating=false;heroH.classList.remove('fade');heroH.innerHTML=S.name?`Still searching for you, <span>${S.name}</span>.`:'Still searching for you.';celebrate('Expanding your search to more lenders…');}
+function keepSearching(){document.querySelector('.card').classList.remove('offerview');['stageB','stageC','stageD','stageE','offer'].forEach(s=>$(s).classList.add('hidden'));$('crYN').classList.add('hidden');$('callBtn').classList.add('hidden');$('standby').classList.add('hidden');heroRotating=false;heroH.classList.remove('fade');heroH.innerHTML=S.name?`Still searching for you, <span>${S.name}</span>.`:'Still searching for you.';celebrate('Expanding your search to more lenders…');}
 </script>
 </body>
 </html>
