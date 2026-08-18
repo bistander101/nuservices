@@ -66,8 +66,9 @@
   @keyframes qglow{0%,100%{box-shadow:0 0 0 0 rgba(21,80,140,0)}50%{box-shadow:0 6px 22px rgba(21,80,140,.16)}}
   .qintro{text-align:center;font-size:var(--fs-sm);font-weight:700;color:var(--green);margin-bottom:7px}
   .qintro .dn{display:inline-block;animation:dip 1.3s ease-in-out infinite}
-  @keyframes dip{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
-  h2.q{font-size:var(--fs-lg);font-weight:800;text-align:center;color:var(--blue);line-height:1.25;margin-bottom:10px}
+  @keyframes dip{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(3px) scale(1.35)}}
+  @keyframes qpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+  h2.q{font-size:var(--fs-lg);font-weight:800;text-align:center;color:var(--blue);line-height:1.25;margin-bottom:10px;animation:qpulse 1.8s ease-in-out .3s infinite}
   .option{position:relative;display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;touch-action:manipulation;text-align:left;min-height:52px}
   .option *{pointer-events:none}   /* iOS: taps always land on the row, never a child span */
   @media(hover:hover){.option:hover{border-color:var(--blue)}}  /* mouse only — no sticky tap-hover on iOS */
