@@ -308,11 +308,12 @@ function checkEligibilityThenRoute(){
     route();
     function route(){
       const n=S.name;
-      const dq=(S.debt==='mid'||S.debt==='high'), pq=(S.payday==='yes'), aq=inc.includes('settlement-annuity-royalties'), cq=!CR_BLOCKED.includes(S.usState);
-      if(S.debt==='mid'&&dq) return offer(`${n}, it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`,NUM.debtMid,false);
-      if(S.debt==='high'&&dq) return offer(`${n}, it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`,NUM.debtHigh,false);
-      if(pq) return offer(`${n}, we have a program that can help you pay off your payday loan more easily, avoiding the fees and interest you are presently paying.`,NUM.payday,false);
+      /* PRIORITY ORDER: 1) Annuity  2) Debt $15k+  3) Debt $7–15k  4) Payday  5) Credit repair */
+      const pq=(S.payday==='yes'), aq=inc.includes('settlement-annuity-royalties'), cq=!CR_BLOCKED.includes(S.usState);
       if(aq) return offer(`${n}, we have a program you seem qualified for that can get you the money you are looking for.`,NUM.annuity,false);
+      if(S.debt==='high') return offer(`${n}, it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`,NUM.debtHigh,false);
+      if(S.debt==='mid') return offer(`${n}, it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`,NUM.debtMid,false);
+      if(pq) return offer(`${n}, we have a program that can help you pay off your payday loan more easily, avoiding the fees and interest you are presently paying.`,NUM.payday,false);
       if(cq) return offer(`${n}, based on your profile, we recommend bringing a credit repair analyst on the line to review your report and see what can be done. There is no obligation.`,NUM.creditRepair,true);
       keepSearching();
     }
