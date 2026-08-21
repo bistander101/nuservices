@@ -20,15 +20,17 @@
     6. Nothing matches → "still searching" holding state
 
   MEDICARE PATH (this file: medi_path.html — offer-wall-PROD + Medicare branch):
-    Extra inputs: &age=67 (decimal ok, e.g. 66.5). Medicare questions appear ONLY if
-    state is in MEDI_STATES (24 covered states from the Alex agent) AND age 64.5–87.
-    Two questions (after payday, before consent), mapped from Alex v7 minus the ones
-    we already know (age/state) or excluded (decisions, POA, assisted living):
+    Extra inputs: &age=67 (decimal ok). Medicare questions appear ONLY if state is in
+    MEDI_STATES (24 covered states from the Alex agent) AND age 64.5–87.
+    Questions (after payday, before consent), from Alex v7 minus excluded items:
       M1: "Do you have Medicare Part A and Part B active right now?"  NO -> not qualified
+      MS: "Do you have a Medicare Supplement plan? (Plan G, F, or N...)" — CAPTURED ONLY
+          (does not gate qualification yet). Shows ONLY if M1 = YES and the client did
+          NOT select SSI/Disability on the income question. Added Aug 2026 per Kurt.
       M2: "Do you have any VA, Tricare, or employer coverage?"        YES -> not qualified
     Qualified -> Medicare offer, transfer (833) 636-1921. Priority: after payday,
     before credit repair — one-line change in route() to promote it.
-    TPMO disclaimer shown on the Medicare offer — placeholders for David Healy.
+    TPMO disclaimer on the Medicare offer — placeholders for David Healy.
 
   PROGRAM NO-GO STATES (blocked program falls through to next priority):
     Payday: WA PA OR NC MT MN KS CT CO · Debt $7-15k: WA ND ID GA
@@ -53,7 +55,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>OneLoanPlace — Finding Your Match</title><!-- medi_path variant -->
+<title>OneLoanPlace — Finding Your Match</title>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -235,6 +237,15 @@
         <div class="option" role="button" tabindex="0"><input type="radio" name="m1" value="no"><span class="cb"></span><span class="otitle">No</span></div>
       </div>
     </div>
+    <div id="stageMS" class="hidden">
+      <div class="qintro">Quick one <span class="dn">👇</span></div>
+      <h2 class="q">Do you have a Medicare Supplement plan?</h2>
+      <p class="fineprint" style="text-align:center;margin-top:-4px">(Plan G, F, or N — or any other Medicare Supplement plan)</p>
+      <div id="msForm">
+        <div class="option" role="button" tabindex="0"><input type="radio" name="ms" value="yes"><span class="cb"></span><span class="otitle">Yes</span></div>
+        <div class="option" role="button" tabindex="0"><input type="radio" name="ms" value="no"><span class="cb"></span><span class="otitle">No</span></div>
+      </div>
+    </div>
     <div id="stageM2" class="hidden">
       <div class="qintro">Last one on this <span class="dn">👇</span></div>
       <h2 class="q">Do you have any VA, Tricare, or employer coverage?</h2>
@@ -259,7 +270,7 @@
         <div class="option" role="button" tabindex="0"><input type="radio" name="cr" value="yes"><span class="cb"></span><span class="otitle">Yes, connect me</span></div>
         <div class="option" role="button" tabindex="0"><input type="radio" name="cr" value="no"><span class="cb"></span><span class="otitle">No thanks</span></div>
       </div>
-      <p id="tpmo" class="fineprint hidden">We do not offer every plan available in your area. Currently we represent [number] organizations which offer [number] products in your area. Please contact Medicare.gov, 1-800-MEDICARE, or your local State Health Insurance Program (SHIP) to get information on all of your options. <!-- ⚠️ TPMO disclaimer — fill counts + David Healy review before launch --></p>
+      <p id="tpmo" class="fineprint hidden">We do not offer every plan available in your area. Currently we represent [number] organizations which offer [number] products in your area. Please contact Medicare.gov, 1-800-MEDICARE, or your local State Health Insurance Program (SHIP) to get information on all of your options. <!-- ⚠️ TPMO — fill counts + David Healy review --></p>
       <a class="call hidden" id="callBtn" href="#">📞 Call now<small id="callNum"></small></a>
       <div class="standby hidden" id="standby"><span class="dot"></span>A specialist is standing by for you</div>
     </div>
@@ -271,7 +282,7 @@ document.getElementById('jswarn').remove();   // JS is alive — remove the prev
 
 /* ── INPUTS from the CRM redirect: ?name=Justin&state=FL ── */
 const params=new URLSearchParams(location.search);
-const S={name:(params.get('name')||'Justin').trim(),usState:(params.get('state')||'TX').toUpperCase(),age:parseFloat(params.get('age'))||67,partAB:null,otherCoverage:null,
+const S={name:(params.get('name')||'Justin').trim(),usState:(params.get('state')||'TX').toUpperCase(),age:parseFloat(params.get('age'))||67,partAB:null,medSupp:null,otherCoverage:null,
          income:null,debt:null,payday:null,consent:null,consentTs:null,progressSeconds:300,lenders:8,matches:0,stepShown:1};
 const $=id=>document.getElementById(id);
 /* say("it looks like…") → "Justin, it looks like…" or "It looks like…" when no name */
@@ -302,7 +313,7 @@ const DEBT_MID_BLOCKED=['WA','ND','ID','GA'];                             /* deb
 const DEBT_HIGH_BLOCKED=['CO','CT','KS','MN','MT','NH','OR','WA'];        /* debt $15k+ */
 const NUM={debtMid:'+15612850387',debtHigh:'+15613696723',payday:'+15618617735',annuity:'+18502905544',medicare:'+18336361921',creditRepair:'+18001116666'};
 
-/* MEDICARE: covered states (from Alex agent v7) + silent age gate 64.5–87 */
+/* MEDICARE: covered states (Alex agent v7) + silent age gate 64.5–87 */
 const MEDI_STATES=['AL','AR','AZ','CO','FL','GA','IN','KY','KS','LA','MI','MS','NM','NV','NC','OH','OK','PA','SC','TN','TX','VA','UT','WV'];
 const mediEligible=()=>MEDI_STATES.includes(S.usState)&&S.age>=64.5&&S.age<88;
 
@@ -364,7 +375,7 @@ function celebrate(msg){toast.textContent=msg;toast.classList.add('show');setTim
 setTimeout(()=>celebrate('✓ First lenders are reviewing your file'),4000);
 
 /* stage machine */
-const show=id=>['stageB','stageC','stageD','stageM1','stageM2','stageE','offer'].forEach(s=>$(s).classList.toggle('hidden',s!==id));
+const show=id=>['stageB','stageC','stageD','stageM1','stageMS','stageM2','stageE','offer'].forEach(s=>$(s).classList.toggle('hidden',s!==id));
 setTimeout(()=>show('stageB'),2600);
 
 (function(){const f=$('income-form'),b=f.querySelector('.continue'),bx=[...f.querySelectorAll('input')],none=bx.find(x=>x.value==='none'),oth=bx.filter(x=>x!==none);
@@ -375,12 +386,20 @@ f.addEventListener('submit',e=>{e.preventDefault();S.income=[...f.querySelectorA
 function radio(id,key,next){$(id).addEventListener('change',e=>{[...$(id).querySelectorAll('.option')].forEach(o=>o.classList.toggle('selected',o.querySelector('input').checked));S[key]=e.target.value;setTimeout(next,220);});}
 radio('ccForm','debt',()=>show('stageD'));
 radio('pdForm','payday',()=>show(mediEligible()?'stageM1':'stageE'));
-/* Medicare Q1: Part A & B — NO ends the Medicare path (silently; flow continues) */
-radio('m1Form','partAB',()=>show(S.partAB==='yes'?'stageM2':'stageE'));
+/* Medicare Q1: Part A & B — NO ends the Medicare path (silently; flow continues).
+   YES -> Supplement question, UNLESS the client selected SSI/Disability on the income
+   question ('government-benefits') — then skip straight to M2 per Kurt (Aug 2026). */
+radio('m1Form','partAB',()=>{
+  if(S.partAB!=='yes') return show('stageE');
+  const ssi=(S.income||[]).includes('government-benefits');
+  show(ssi?'stageM2':'stageMS');
+});
+/* Medicare Supplement (Plan G/F/N etc.) — CAPTURED (S.medSupp), does not gate yet */
+radio('msForm','medSupp',()=>show('stageM2'));
 /* Medicare Q2: other coverage — YES ends the Medicare path */
 radio('m2Form','otherCoverage',()=>show('stageE'));
 /* CONSENT stage — records the client's answer + timestamp; 'no' still routes (client can dial out; we just don't share data) */
-radio('consForm','consent',()=>{S.consentTs=new Date().toISOString();['stageB','stageC','stageD','stageM1','stageM2','stageE','offer'].forEach(s=>$(s).classList.add('hidden'));celebrate(S.consent==='yes'?'✓ Thanks — finding your match':'✓ All set — finding your match');checkEligibilityThenRoute();});
+radio('consForm','consent',()=>{S.consentTs=new Date().toISOString();['stageB','stageC','stageD','stageM1','stageMS','stageM2','stageE','offer'].forEach(s=>$(s).classList.add('hidden'));celebrate(S.consent==='yes'?'✓ Thanks — finding your match':'✓ All set — finding your match');checkEligibilityThenRoute();});
 
 /* PRODUCTION HOOK — replace/augment with the real PartnerEligibilityCheck call */
 function checkEligibilityThenRoute(){
@@ -394,7 +413,7 @@ function checkEligibilityThenRoute(){
       if(S.debt==='high'&&!DEBT_HIGH_BLOCKED.includes(S.usState)) return offer(say(`it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`),NUM.debtHigh,false);
       if(S.debt==='mid'&&!DEBT_MID_BLOCKED.includes(S.usState)) return offer(say(`it looks like we have a great program you may qualify for. It doesn't provide money upfront; however, it could lower your monthly payments significantly.`),NUM.debtMid,false);
       if(pq&&!PD_BLOCKED.includes(S.usState)) return offer(say(`we have a program that can help you pay off your payday loan more easily, avoiding the fees and interest you are presently paying.`),NUM.payday,false);
-      /* MEDICARE — to promote its priority, move this line up. Qualified = eligible + A&B yes + no other coverage */
+      /* MEDICARE — to promote priority, move this line up. Qualified = eligible + A&B yes + no other coverage */
       const mq=mediEligible()&&S.partAB==='yes'&&S.otherCoverage==='no';
       if(mq){document.getElementById('tpmo').classList.remove('hidden');return offer(say(`you appear eligible for a free, no-obligation review of your 2026 Medicare Advantage options with a licensed insurance agent — it usually takes just eight to ten minutes, and there's no pressure to change anything.`),NUM.medicare,false);}
       if(cq) return offer(say(`based on your profile, we recommend bringing a credit repair analyst on the line to review your report and see what can be done. There is no obligation.`),NUM.creditRepair,true);
@@ -414,7 +433,7 @@ function offer(msg,num,isCR){
   else {b.classList.remove('hidden');sb.classList.remove('hidden');}
   b.href='tel:'+num;$('callNum').textContent=num.replace('+1','').replace(/(\d{3})(\d{3})(\d{4})/,'($1) $2-$3');
 }
-function keepSearching(){document.querySelector('.card').classList.remove('offerview');['stageB','stageC','stageD','stageM1','stageM2','stageE','offer'].forEach(s=>$(s).classList.add('hidden'));$('crYN').classList.add('hidden');$('callBtn').classList.add('hidden');$('standby').classList.add('hidden');heroRotating=false;heroH.classList.remove('fade');heroH.innerHTML=S.name?`Still searching for you, <span>${S.name}</span>.`:'Still searching for you.';celebrate('Expanding your search to more lenders…');}
+function keepSearching(){document.querySelector('.card').classList.remove('offerview');['stageB','stageC','stageD','stageM1','stageMS','stageM2','stageE','offer'].forEach(s=>$(s).classList.add('hidden'));$('crYN').classList.add('hidden');$('callBtn').classList.add('hidden');$('standby').classList.add('hidden');heroRotating=false;heroH.classList.remove('fade');heroH.innerHTML=S.name?`Still searching for you, <span>${S.name}</span>.`:'Still searching for you.';celebrate('Expanding your search to more lenders…');}
 </script>
 </body>
 </html>
